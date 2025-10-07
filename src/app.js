@@ -11,7 +11,7 @@ app.post("/signup", async (req, res) => {
     await newUser.save();
     res.send("User signed up successfully");
   } catch (err) {
-    res.status(400).send("Error while creating the user" + err.message);
+    res.status(400).send(err.message);
   }
 });
 
@@ -51,32 +51,70 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-app.patch("/user", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
   try {
-    const id = req.body.id;
+    const ALLOWED_UPDATES = [
+      "password",
+      "phone",
+      "about",
+      "skills",
+      "photoURL",
+    ];
+
+    const isValidOperation = Object.keys(req.body).every((update) =>
+      ALLOWED_UPDATES.includes(update)
+    );
+    if (!isValidOperation) {
+      throw new Error("Update is not allowed");
+    }
+
+    const id = req.params.userId;
     const user = await User.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
     });
-    res
-      .status(200)
-      .send({ message: "User updated successfully", ...user._doc });
+    if (!user) {
+      throw new Error("User not found with userId: " + id);
+    } else {
+      res
+        .status(200)
+        .send({ message: "User updated successfully", ...user._doc });
+    }
   } catch (err) {
-    res.status(400).send("Something went wrong" + err.message);
+    res.status(400).send(err.message);
   }
 });
 
-app.put("/user", async (req, res) => {
+app.put("/user/:userId", async (req, res) => {
   try {
-    const id = req.body.id;
+    const ALLOWED_UPDATES = [
+      "password",
+      "phone",
+      "about",
+      "skills",
+      "photoURL",
+    ];
+
+    const isValidOperation = Object.keys(req.body).every((update) =>
+      ALLOWED_UPDATES.includes(update)
+    );
+    if (!isValidOperation) {
+      throw new Error("Update is not allowed");
+    }
+
+    const id = req.params.userId;
     const user = await User.findByIdAndUpdate(id, req.body, {
       new: true,
       overwrite: true,
       runValidators: true, //if any validation is added in schema it will run for update query as well by defaut it will run on insertion only
     });
-    res
-      .status(200)
-      .send({ message: "User updated successfully", ...user._doc });
+    if (!user) {
+      throw new Error("User not found with userId: " + id);
+    } else {
+      res
+        .status(200)
+        .send({ message: "User updated successfully", ...user._doc });
+    }
   } catch (err) {
     res.status(400).send("Something went wrong" + err.message);
   }
