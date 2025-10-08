@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const { connectDB } = require("./config/database");
 const User = require("./models/user");
 const { validateSignupData } = require("./utils/validation");
+const { userAuth } = require("./middlewares/auth");
 
 const app = express();
 app.use(express.json());
@@ -31,7 +32,6 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   try {
-    console.log(req.body.email, req.body.password);
     const { email, password } = req.body;
     if (!validator.isEmail(email)) {
       throw new Error("Email is not valid");
@@ -44,32 +44,29 @@ app.post("/login", async (req, res) => {
     if (!isPasswordMatch) {
       throw new Error("Invalid credentials");
     }
-    const jwtToken = jwt.sign({ _id: user._id }, "DEV@TINDER$PRASHANT");
+    const jwtToken = jwt.sign({ _id: user._id }, "DEV@TINDER$PRASHANT", {
+      expiresIn: "1h",
+    });
     //res.cookie("token", jwtToken);
     res
       .status(200)
-      .cookie("token", jwtToken)
+      .cookie("token", jwtToken, { expires: new Date(Date.now() + 3600000) })
       .send("User logged in successfully");
   } catch (err) {
     res.status(400).send(err.message);
   }
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const cookies = req.cookies;
-    if (!cookies.token) {
-      throw new Error("Authentication token not found");
-    }
-    const decodedToken = jwt.verify(cookies.token, "DEV@TINDER$PRASHANT");
-    const user = await User.findById(decodedToken._id);
+    const user = req.user;
     res.send(user);
   } catch (err) {
     res.status(401).send("Error: " + err.message);
   }
 });
 
-app.get("/user", async (req, res) => {
+app.get("/user", userAuth, async (req, res) => {
   try {
     const users = await User.find({ email: req.query.email });
     if (users.length === 0) {
@@ -82,7 +79,7 @@ app.get("/user", async (req, res) => {
   }
 });
 
-app.get("/feed", async (req, res) => {
+app.get("/feed", userAuth, async (req, res) => {
   try {
     const users = await User.find({});
     if (users.length === 0) {
@@ -95,7 +92,7 @@ app.get("/feed", async (req, res) => {
   }
 });
 
-app.delete("/user", async (req, res) => {
+app.delete("/user", userAuth, async (req, res) => {
   try {
     const id = req.query.id;
     const users = await User.findByIdAndDelete(id);
@@ -105,7 +102,7 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-app.patch("/user/:userId", async (req, res) => {
+app.patch("/user/:userId", userAuth, async (req, res) => {
   try {
     const ALLOWED_UPDATES = [
       "password",
@@ -139,7 +136,7 @@ app.patch("/user/:userId", async (req, res) => {
   }
 });
 
-app.put("/user/:userId", async (req, res) => {
+app.put("/user/:userId", userAuth, async (req, res) => {
   try {
     const ALLOWED_UPDATES = [
       "password",
