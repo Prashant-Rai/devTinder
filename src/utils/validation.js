@@ -28,4 +28,33 @@ const validateSignupData = (req) => {
   }
 };
 
-module.exports = { validateSignupData };
+const validateEditProfileData = (req) => {
+  const ALLOWED_EDIT_FIELDS = [
+    "firstName",
+    "lastName",
+    "email",
+    "phone",
+    "age",
+    "gender",
+    "photoURL",
+    "about",
+    "skills",
+  ];
+  const editFieldSet = new Set(ALLOWED_EDIT_FIELDS);
+  let notAllowedField = "";
+  let isValid = true;
+  const reqBodyKeys = Object.keys(req.body);
+
+  for (let key of reqBodyKeys) {
+    if (editFieldSet.has(key)) {
+      isValid = true;
+    } else {
+      isValid = false;
+      notAllowedField = key.toUpperCase();
+      break;
+    }
+  }
+  return { isValid, notAllowedField };
+};
+
+module.exports = { validateSignupData, validateEditProfileData };
