@@ -4,6 +4,7 @@ const { connectDB } = require("./config/database");
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
 const requestRoutes = require("./routes/requests");
+const userRoutes = require("./routes/user");
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,7 @@ app.use(cookieParser());
 app.use("/", authRoutes);
 app.use("/", profileRoutes);
 app.use("/", requestRoutes);
+app.use("/", userRoutes);
 
 connectDB()
   .then(() => {

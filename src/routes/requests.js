@@ -4,7 +4,7 @@ const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/request");
 const User = require("../models/user");
 
-router.post("/request/:status/:toUserId", userAuth, async (req, res) => {
+router.post("/request/send/:status/:toUserId", userAuth, async (req, res) => {
   try {
     const user = req.user;
     const fromUserId = user._id;
@@ -31,7 +31,6 @@ router.post("/request/:status/:toUserId", userAuth, async (req, res) => {
         { fromUserId: toUserId, toUserId: fromUserId },
       ],
     });
-    console.log(isConnectionExist);
     if (isConnectionExist) {
       throw new Error("Connection request already exists! ");
     }
@@ -47,5 +46,40 @@ router.post("/request/:status/:toUserId", userAuth, async (req, res) => {
     res.send("Error: " + err.message);
   }
 });
+
+router.post(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const userId = req.user._id;
+      const requestId = req.params.requestId;
+      const status = req.params.status;
+
+      const ALLOWED_STATUS = ["accepted", "rejected"];
+
+      if (ALLOWED_STATUS.indexOf(status) === -1) {
+        throw new Error(`'${status}' status is not allowed`);
+      }
+
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: requestId,
+        status: "interested",
+        toUserId: userId,
+      });
+
+      if (!connectionRequest) {
+        throw new Error(
+          "No RequestId not found to accept the connection request"
+        );
+      }
+      connectionRequest.status = status;
+      const data = await connectionRequest.save();
+      res.json({ message: `Request ${status} successfully`, data });
+    } catch (err) {
+      res.send("Error: " + err.message);
+    }
+  }
+);
 
 module.exports = router;
