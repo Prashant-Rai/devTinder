@@ -5,7 +5,15 @@ const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/request");
 const User = require("../models/user");
 
-const SAFE_USER_FIELDS = ["firstName", "lastName", "age", "about", "skills"];
+const SAFE_USER_FIELDS = [
+  "firstName",
+  "lastName",
+  "age",
+  "gender",
+  "about",
+  "skills",
+  "photoURL",
+];
 
 router.get("/user/requests/recieved", userAuth, async (req, res) => {
   try {
@@ -15,7 +23,7 @@ router.get("/user/requests/recieved", userAuth, async (req, res) => {
       status: "interested",
     }).populate("fromUserId", SAFE_USER_FIELDS);
     ///instead of array we can use space seperated field names or we can use object approach to populate the data
-    res.json({ message: "success", data: recievedConnections });
+    res.send(recievedConnections);
   } catch (err) {
     res.send("Error: " + err.message);
   }
@@ -37,10 +45,7 @@ router.get("/user/connections", userAuth, async (req, res) => {
       }
       return item.toUserId;
     });
-    res.json({
-      message: "success",
-      data,
-    });
+    res.send(data);
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
@@ -79,7 +84,7 @@ router.get("/feed", userAuth, async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    res.json({ message: "success", data });
+    res.send(data);
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }

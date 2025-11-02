@@ -24,10 +24,7 @@ router.patch("/profile/edit", userAuth, async (req, res) => {
     const updatedProfile = await loginedUser.save();
     const { password, ...userWithoutPassword } = updatedProfile._doc;
 
-    res.status(200).json({
-      message: "Profile updated successfully",
-      data: userWithoutPassword,
-    });
+    res.status(200).send(userWithoutPassword);
   } catch (err) {
     res.status(401).send("Error: " + err.message);
   }

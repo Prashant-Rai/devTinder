@@ -43,7 +43,7 @@ router.post("/login", async (req, res) => {
     res
       .status(200)
       .cookie("token", jwtToken, { expires: new Date(Date.now() + 3600000) })
-      .send("User logged in successfully");
+      .send(user);
   } catch (err) {
     res.status(400).send(err.message);
   }
